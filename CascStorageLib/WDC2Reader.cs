@@ -314,9 +314,7 @@ namespace CascStorageLib
                     else
                     {
                         // sparse data with inlined strings
-                        sparseData = reader.ReadBytes(sections[sectionIndex].SparseTableOffset - sections[sectionIndex].FileOffset);
-
-                        recordsData = sparseData;
+                        recordsData = reader.ReadBytes(sections[sectionIndex].SparseTableOffset - sections[sectionIndex].FileOffset);
 
                         if (reader.BaseStream.Position != sections[sectionIndex].SparseTableOffset)
                             throw new Exception("reader.BaseStream.Position != sections[sectionIndex].SparseTableOffset");

@@ -52,7 +52,6 @@ namespace CascStorageLib
         protected Dictionary<long, string> m_stringsTable;
 
         // sparse records data
-        public byte[] sparseData;
         public SparseEntry[] sparseEntries;
 
         public bool HasRow(int id)

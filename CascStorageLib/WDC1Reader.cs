@@ -87,37 +87,6 @@ namespace CascStorageLib
             },
         };
 
-        public T GetField<T>(int fieldIndex, int arrayIndex = -1)
-        {
-            object value = null;
-
-            if (fieldIndex >= m_reader.Meta.Length)
-            {
-                value = m_refData?.Id ?? 0;
-                return (T)value;
-            }
-
-            m_data.Position = m_columnMeta[fieldIndex].RecordOffset;
-            m_data.Offset = m_dataOffset;
-
-            if (arrayIndex >= 0)
-            {
-                if (arrayReaders.TryGetValue(typeof(T), out var reader))
-                    value = reader(m_data, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_reader.StringTable, arrayIndex);
-                else
-                    throw new Exception("Unhandled array type: " + typeof(T).Name);
-            }
-            else
-            {
-                if (simpleReaders.TryGetValue(typeof(T), out var reader))
-                    value = reader(Id, m_data, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_reader.StringTable, m_reader);
-                else
-                    throw new Exception("Unhandled field type: " + typeof(T).Name);
-            }
-
-            return (T)value;
-        }
-
         public void GetFields<T>(FieldCache<T>[] fields, T entry)
         {
             //Store start position
@@ -309,9 +278,7 @@ namespace CascStorageLib
                 else
                 {
                     // sparse data with inlined strings
-                    sparseData = reader.ReadBytes(sparseTableOffset - HeaderSize - Marshal.SizeOf<FieldMetaData>() * FieldsCount);
-
-                    recordsData = sparseData;
+                    recordsData = reader.ReadBytes(sparseTableOffset - HeaderSize - Marshal.SizeOf<FieldMetaData>() * FieldsCount);
 
                     if (reader.BaseStream.Position != sparseTableOffset)
                         throw new Exception("r.BaseStream.Position != sparseTableOffset");
