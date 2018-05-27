@@ -380,9 +380,6 @@ namespace CascStorageLib
                             _Records.Add((int)m_indexData[i], rec);
                         else
                             _Records.Add(rec.Id, rec);
-
-                        //if (i % 1000 == 0)
-                        //    Console.Write("\r{0} records read", i);
                     }
 
                     if (Flags.HasFlag(DB2Flags.Sparse))
