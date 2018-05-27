@@ -46,16 +46,28 @@ namespace CascStorageLib
             }
         }
 
-        private static Dictionary<Type, Func<int, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>> simpleReaders = new Dictionary<Type, Func<int, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>>
+        private static Dictionary<Type, Func<int, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, DB2Reader, object>> simpleReaders = new Dictionary<Type, Func<int, BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, DB2Reader, object>>
         {
-            [typeof(float)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<float>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(int)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(uint)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<uint>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(short)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<short>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(ushort)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<ushort>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(sbyte)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<sbyte>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(byte)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValue<byte>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(string)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable) => { int strOfs = GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData); return stringTable[strOfs]; },
+            [typeof(long)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => GetFieldValue<long>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(float)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => GetFieldValue<float>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(int)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(uint)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => GetFieldValue<uint>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(short)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => GetFieldValue<short>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(ushort)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => GetFieldValue<ushort>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(sbyte)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => GetFieldValue<sbyte>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(byte)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => GetFieldValue<byte>(id, data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(string)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) =>
+            {
+                if (header.Flags.HasFlag(DB2Flags.Sparse))
+                {
+                    return data.ReadCString();
+                }
+                else
+                {
+                    int strOfs = GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData);
+                    return stringTable[strOfs];
+                }
+            },
         };
 
         private static Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, int, object>> arrayReaders = new Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, int, object>>
@@ -65,7 +77,9 @@ namespace CascStorageLib
             [typeof(uint[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<uint>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
             [typeof(ulong[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<ulong>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
             [typeof(ushort[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<ushort>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
+            [typeof(short[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<short>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
             [typeof(byte[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<byte>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
+            [typeof(sbyte[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<sbyte>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
             [typeof(string[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) =>
             {
                 int strOfs = GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex)[0];
@@ -96,7 +110,7 @@ namespace CascStorageLib
             else
             {
                 if (simpleReaders.TryGetValue(typeof(T), out var reader))
-                    value = reader(Id, m_data, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_reader.StringTable);
+                    value = reader(Id, m_data, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_reader.StringTable, m_reader);
                 else
                     throw new Exception("Unhandled field type: " + typeof(T).Name);
             }
@@ -106,6 +120,10 @@ namespace CascStorageLib
 
         public void GetFields<T>(FieldCache<T>[] fields, T entry)
         {
+            //Store start position
+            int offSet = m_data.Position;
+            int recordSize = m_reader.Flags.HasFlag(DB2Flags.Sparse) ? (int)m_reader.sparseEntries[RecordIndex].Size * 8 : 0;
+
             for (int i = 0; i < fields.Length; ++i)
             {
                 FieldCache<T> info = fields[i];
@@ -115,12 +133,15 @@ namespace CascStorageLib
                 if (fieldIndex >= m_reader.Meta.Length)
                 {
                     value = m_refData?.Id ?? 0;
-                    info.Setter(entry, value);
+                    info.Setter(entry, Convert.ChangeType(value, info.Field.FieldType));
                     continue;
                 }
 
-                m_data.Position = m_columnMeta[fieldIndex].RecordOffset;
-                m_data.Offset = m_dataOffset;
+                if (!m_reader.Flags.HasFlag(DB2Flags.Sparse))
+                {
+                    m_data.Position = m_columnMeta[fieldIndex].RecordOffset;
+                    m_data.Offset = m_dataOffset;
+                }
 
                 if (info.ArraySize >= 0)
                 {
@@ -132,13 +153,16 @@ namespace CascStorageLib
                 else
                 {
                     if (simpleReaders.TryGetValue(info.Field.FieldType, out var reader))
-                        value = reader(Id, m_data, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_reader.StringTable);
+                        value = reader(Id, m_data, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_reader.StringTable, m_reader);
                     else
                         throw new Exception("Unhandled field type: " + typeof(T).Name);
                 }
 
                 info.Setter(entry, value);
             }
+
+            if (m_data.Position - offSet < recordSize)
+                m_data.Position += (recordSize - (m_data.Position - offSet));
         }
 
         private static T GetFieldValue<T>(int Id, BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData) where T : struct
@@ -247,7 +271,7 @@ namespace CascStorageLib
                 MaxIndex = reader.ReadInt32();
                 int locale = reader.ReadInt32();
                 int copyTableSize = reader.ReadInt32();
-                int flags = reader.ReadUInt16();
+                Flags = (DB2Flags)reader.ReadUInt16();
                 IdFieldIndex = reader.ReadUInt16();
 
                 int totalFieldsCount = reader.ReadInt32();
@@ -263,7 +287,7 @@ namespace CascStorageLib
                 // field meta data
                 m_meta = reader.ReadArray<FieldMetaData>(FieldsCount);
 
-                if ((flags & 0x1) == 0)
+                if (!Flags.HasFlag(DB2Flags.Sparse))
                 {
                     // records data
                     recordsData = reader.ReadBytes(RecordsCount * RecordSize);
@@ -287,15 +311,32 @@ namespace CascStorageLib
                     // sparse data with inlined strings
                     sparseData = reader.ReadBytes(sparseTableOffset - HeaderSize - Marshal.SizeOf<FieldMetaData>() * FieldsCount);
 
+                    recordsData = sparseData;
+
                     if (reader.BaseStream.Position != sparseTableOffset)
                         throw new Exception("r.BaseStream.Position != sparseTableOffset");
 
-                    sparseEntries = reader.ReadArray<SparseEntry>(MaxIndex - MinIndex + 1);
+                    Dictionary<uint, int> offSetKeyMap = new Dictionary<uint, int>();
+                    List<SparseEntry> tempSparseEntries = new List<SparseEntry>();
+                    for (int i = 0; i < (MaxIndex - MinIndex + 1); i++)
+                    {
+                        SparseEntry sparse = reader.Read<SparseEntry>();
 
-                    if (sparseTableOffset != 0)
-                        throw new Exception("Sparse Table NYI!");
-                    else
-                        throw new Exception("Sparse Table with zero offset?");
+                        if (sparse.Offset == 0 || sparse.Size == 0)
+                            continue;
+
+                        // special case, may contain duplicates in the offset map that we don't want
+                        if (copyTableSize == 0)
+                        {
+                            if (offSetKeyMap.ContainsKey(sparse.Offset))
+                                continue;
+                        }
+
+                        tempSparseEntries.Add(sparse);
+                        offSetKeyMap.Add(sparse.Offset, 0);
+                    }
+
+                    sparseEntries = tempSparseEntries.ToArray();
                 }
 
                 // index data
@@ -369,6 +410,9 @@ namespace CascStorageLib
                     if (i % 1000 == 0)
                         Console.Write("\r{0} records read", i);
                 }
+
+                if (Flags.HasFlag(DB2Flags.Sparse))
+                    bitReader.Offset = 0;
 
                 foreach (var copyRow in copyData)
                 {

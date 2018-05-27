@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace CascStorageLib
 {
@@ -10,7 +11,6 @@ namespace CascStorageLib
     {
         int Id { get; set; }
         int RecordIndex { get; set; }
-        T GetField<T>(int fieldIndex, int arrayIndex = -1);
         void GetFields<T>(FieldCache<T>[] fields, T entry);
         IDB2Row Clone();
     }
@@ -26,7 +26,7 @@ namespace CascStorageLib
         public int MinIndex { get; protected set; }
         public int MaxIndex { get; protected set; }
         public int IdFieldIndex { get; protected set; }
-        public int Flags { get; protected set; }
+        public DB2Flags Flags { get; protected set; }
 
         protected FieldMetaData[] m_meta;
         public FieldMetaData[] Meta => m_meta;
@@ -54,22 +54,6 @@ namespace CascStorageLib
         // sparse records data
         public byte[] sparseData;
         public SparseEntry[] sparseEntries;
-        protected BinaryReader sparseDataReader;
-        public BinaryReader SparseDataReader
-        {
-            get
-            {
-                if (sparseData == null)
-                    return null;
-
-                if (sparseDataReader != null)
-                    return sparseDataReader;
-
-                sparseDataReader = new BinaryReader(new MemoryStream(sparseData));
-                //sparseDataReader.BaseStream.Position = 1;
-                return sparseDataReader;
-            }
-        }
 
         public bool HasRow(int id)
         {
@@ -273,6 +257,18 @@ namespace CascStorageLib
                 ulong result = ReadUInt64(numBits);
                 return *(Value64*)&result;
             }
+        }
+
+        public string ReadCString()
+        {
+            uint num;
+            List<byte> bytes = new List<byte>();
+            int byteSize = 8;
+
+            while ((num = ReadUInt32(byteSize)) != 0)
+                bytes.Add(Convert.ToByte(num));
+
+            return Encoding.UTF8.GetString(bytes.ToArray());
         }
     }
 }
