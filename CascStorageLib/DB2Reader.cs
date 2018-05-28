@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -10,7 +9,6 @@ namespace CascStorageLib
     public interface IDB2Row
     {
         int Id { get; set; }
-        int RecordIndex { get; set; }
         void GetFields<T>(FieldCache<T>[] fields, T entry);
         IDB2Row Clone();
     }
@@ -174,15 +172,14 @@ namespace CascStorageLib
         public ReferenceEntry[] Entries { get; set; }
     }
 
-    [Flags]
     public enum DB2Flags
     {
-        None = 0x0,
-        Sparse = 0x1,
+        None         = 0x0,
+        Sparse       = 0x1,
         SecondaryKey = 0x2,
-        Index = 0x4,
-        Unknown1 = 0x8,
-        Unknown2 = 0x10
+        Index        = 0x4,
+        Unknown1     = 0x8,
+        Unknown2     = 0x10
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]

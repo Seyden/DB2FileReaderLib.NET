@@ -45,6 +45,11 @@ namespace CascStorageLib
 
             return FastStruct<T>.ReadArray(result);
         }
+
+        public static bool HasFlagExt(this DB2Flags flag, DB2Flags valueToCheck)
+        {
+            return (flag & valueToCheck) == valueToCheck;
+        }
     }
 
     public static class CStringExtensions

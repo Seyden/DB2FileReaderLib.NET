@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\IndexAttribute.cs" />
     <Compile Include="DB2Reader.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="FastStruct.cs" />

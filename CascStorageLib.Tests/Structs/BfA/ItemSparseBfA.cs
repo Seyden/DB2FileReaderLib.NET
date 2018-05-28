@@ -1,9 +1,12 @@
-﻿using System.Runtime.InteropServices;
+﻿using CascStorageLib.Attributes;
+using System.Runtime.InteropServices;
 
 namespace CascStorageLib.Tests.Structs.BfA
 {
     public class ItemSparseEntryBfA
     {
+        [Index]
+        public int ID;
         public long AllowableRace;
         public string Description;
         public string Name3;

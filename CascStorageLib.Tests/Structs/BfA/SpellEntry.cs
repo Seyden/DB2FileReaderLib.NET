@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CascStorageLib.Attributes;
 
 namespace CascStorageLib.Tests
 {
     public class SpellEntry
     {
+        [Index]
+        public int ID;
         public string NameSubtext;
         public string Description;
         public string AuraDescription;

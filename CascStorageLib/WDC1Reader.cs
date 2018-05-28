@@ -11,9 +11,9 @@ namespace CascStorageLib
         private BitReader m_data;
         private DB2Reader m_reader;
         private int m_dataOffset;
+        private int m_recordIndex;
 
         public int Id { get; set; }
-        public int RecordIndex { get; set; }
 
         private FieldMetaData[] m_fieldMeta;
         private ColumnMetaData[] m_columnMeta;
@@ -21,10 +21,11 @@ namespace CascStorageLib
         private Dictionary<int, Value32>[] m_commonData;
         private ReferenceEntry? m_refData;
 
-        public WDC1Row(DB2Reader reader, BitReader data, int id, ReferenceEntry? refData)
+        public WDC1Row(DB2Reader reader, BitReader data, int id, ReferenceEntry? refData, int recordIndex)
         {
             m_reader = reader;
             m_data = data;
+            m_recordIndex = recordIndex;
 
             m_dataOffset = m_data.Offset;
 
@@ -91,13 +92,21 @@ namespace CascStorageLib
         {
             //Store start position
             int offSet = m_data.Position;
-            int recordSize = m_reader.Flags.HasFlag(DB2Flags.Sparse) ? (int)m_reader.sparseEntries[RecordIndex].Size * 8 : 0;
+            int recordSize = m_reader.Flags.HasFlagExt(DB2Flags.Sparse) ? (int)m_reader.sparseEntries[m_recordIndex].Size * 8 : 0;
+            int indexFieldOffSet = 0;
 
             for (int i = 0; i < fields.Length; ++i)
             {
                 FieldCache<T> info = fields[i];
+                if (info.IndexMapField)
+                {
+                    indexFieldOffSet++;
+                    info.Setter(entry, Id);
+                    continue;
+                }
+
                 object value = null;
-                int fieldIndex = i;
+                int fieldIndex = i - indexFieldOffSet;
 
                 if (fieldIndex >= m_reader.Meta.Length)
                 {
@@ -106,7 +115,7 @@ namespace CascStorageLib
                     continue;
                 }
 
-                if (!m_reader.Flags.HasFlag(DB2Flags.Sparse))
+                if (!m_reader.Flags.HasFlagExt(DB2Flags.Sparse))
                 {
                     m_data.Position = m_columnMeta[fieldIndex].RecordOffset;
                     m_data.Offset = m_dataOffset;
@@ -366,8 +375,7 @@ namespace CascStorageLib
                     bitReader.Position = 0;
                     bitReader.Offset = i * RecordSize;
 
-                    IDB2Row rec = new WDC1Row(this, bitReader, indexDataSize != 0 ? m_indexData[i] : -1, refData?.Entries[i]);
-                    rec.RecordIndex = i;
+                    IDB2Row rec = new WDC1Row(this, bitReader, indexDataSize != 0 ? m_indexData[i] : -1, refData?.Entries[i], i);
 
                     if (indexDataSize != 0)
                         _Records.Add(m_indexData[i], rec);

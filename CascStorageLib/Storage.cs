@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CascStorageLib.Attributes;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -32,10 +33,15 @@ namespace CascStorageLib
             }
 
             FieldInfo[] fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.NonPublic | BindingFlags.Instance).ToArray();
+
             FieldCache<T>[] fieldCache = new FieldCache<T>[fields.Length];
 
             for (int i = 0; i < fields.Length; ++i)
-                fieldCache[i] = new FieldCache<T>(fields[i], fields[i].GetCustomAttribute<MarshalAsAttribute>()?.SizeConst ?? -1, fields[i].GetSetter<T>());
+            {
+                bool indexMapAttribute = reader.Flags.HasFlag(DB2Flags.Index) ? fields[i].GetCustomAttribute<IndexAttribute>() != null : false;
+
+                fieldCache[i] = new FieldCache<T>(fields[i], fields[i].GetCustomAttribute<MarshalAsAttribute>()?.SizeConst ?? -1, fields[i].GetSetter<T>(), indexMapAttribute);
+            }
 
             IEnumerator<KeyValuePair<int, IDB2Row>> coll = reader.GetEnumerator();
             while (coll.MoveNext())

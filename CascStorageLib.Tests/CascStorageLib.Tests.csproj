@@ -50,9 +50,10 @@
   <ItemGroup>
     <Compile Include="Structs\BfA\AchievementEntry.cs" />
     <Compile Include="Structs\BfA\ItemSparseBfA.cs" />
+    <Compile Include="Structs\BfA\SoundKitName.cs" />
     <Compile Include="Structs\Legion\ItemSparseLegion.cs" />
     <Compile Include="Structs\Legion\MapDifficulty.cs" />
-    <Compile Include="Structs\BfA\SpellEffectEntry2.cs" />
+    <Compile Include="Structs\BfA\SpellEffectEntry.cs" />
     <Compile Include="Structs\BfA\SpellEntry.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
