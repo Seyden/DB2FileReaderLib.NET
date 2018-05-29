@@ -1,13 +1,14 @@
 ﻿using CascStorageLib.Attributes;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace CascStorageLib
 {
-    public class Storage<T> : Dictionary<int, T> where T : class, new()
+    public class Storage<T> : ConcurrentDictionary<int, T> where T : class, new()
     {
         public Storage(string fileName)
         {
@@ -42,16 +43,15 @@ namespace CascStorageLib
                 fieldCache[i] = new FieldCache<T>(fields[i], fields[i].FieldType.IsArray, fields[i].GetSetter<T>(), indexMapAttribute);
             }
 
-            IEnumerator<KeyValuePair<int, IDB2Row>> coll = reader.GetEnumerator();
-            while (coll.MoveNext())
+            //var startTime = DateTime.Now;
+            Parallel.ForEach(reader.AsEnumerable(), row =>
             {
-                KeyValuePair<int, IDB2Row> item = coll.Current;
                 T entry = new T();
 
-                item.Value.GetFields(fieldCache, entry);
+                row.Value.GetFields(fieldCache, entry);
 
-                Add(item.Key, entry);
-            }
+                TryAdd(row.Key, entry);
+            });
         }
     }
 }

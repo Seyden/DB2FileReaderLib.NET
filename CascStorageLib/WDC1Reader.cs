@@ -90,9 +90,6 @@ namespace CascStorageLib
 
         public void GetFields<T>(FieldCache<T>[] fields, T entry)
         {
-            //Store start position
-            int offSet = m_data.Position;
-            int recordSize = m_reader.Flags.HasFlagExt(DB2Flags.Sparse) ? (int)m_reader.sparseEntries[m_recordIndex].Size * 8 : 0;
             int indexFieldOffSet = 0;
 
             for (int i = 0; i < fields.Length; ++i)
@@ -138,9 +135,6 @@ namespace CascStorageLib
 
                 info.Setter(entry, value);
             }
-
-            if (m_data.Position - offSet < recordSize)
-                m_data.Position += (recordSize - (m_data.Position - offSet));
         }
 
         private static T GetFieldValue<T>(int Id, BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData) where T : struct
@@ -358,12 +352,20 @@ namespace CascStorageLib
                     refData.Entries = reader.ReadArray<ReferenceEntry>(refData.NumRecords);
                 }
 
-                BitReader bitReader = new BitReader(recordsData);
+                int position = 0;
 
                 for (int i = 0; i < RecordsCount; ++i)
                 {
+                    BitReader bitReader = new BitReader(recordsData);
                     bitReader.Position = 0;
-                    bitReader.Offset = i * RecordSize;
+
+                    if (Flags.HasFlagExt(DB2Flags.Sparse))
+                    {
+                        bitReader.Position = position;
+                        position += sparseEntries[i].Size * 8;
+                    }
+                    else
+                        bitReader.Offset = i * RecordSize;
 
                     IDB2Row rec = new WDC1Row(this, bitReader, indexDataSize != 0 ? m_indexData[i] : -1, refData?.Entries[i], i);
 
@@ -372,9 +374,6 @@ namespace CascStorageLib
                     else
                         _Records.Add(rec.Id, rec);
                 }
-
-                if (Flags.HasFlag(DB2Flags.Sparse))
-                    bitReader.Offset = 0;
 
                 foreach (var copyRow in copyData)
                 {
