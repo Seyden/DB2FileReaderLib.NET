@@ -1,5 +1,4 @@
 ﻿using CascStorageLib.Attributes;
-using System.Runtime.InteropServices;
 
 namespace CascStorageLib.Tests.Structs.BfA
 {
@@ -18,9 +17,7 @@ namespace CascStorageLib.Tests.Structs.BfA
         public float QualityModifier;
         public int BagFamily;
         public float ItemRange;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
         public float[] StatPercentageOfSocket;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
         public int[] StatPercentEditor;
         public int Stackable;
         public int MaxCount;
@@ -30,8 +27,8 @@ namespace CascStorageLib.Tests.Structs.BfA
         public int VendorStackCount;
         public float PriceVariance;
         public float PriceRandomValue;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
         public uint[] Flags;
+        public int Unknown;
         public ushort ItemNameDescriptionId;
         public ushort RequiredTransmogHoliday;
         public ushort RequiredHoliday;
@@ -53,12 +50,11 @@ namespace CascStorageLib.Tests.Structs.BfA
         public ushort RequiredSkillRank;
         public ushort RequiredSkill;
         public ushort ItemLevel;
-        public short AllowableClass;
+        public ushort AllowableClass;
         public byte ExpansionId;
         public byte ArtifactId;
         public byte SpellWeight;
         public byte SpellWeightCategory;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
         public byte[] SocketType;
         public byte SheatheType;
         public byte Material;
@@ -66,7 +62,6 @@ namespace CascStorageLib.Tests.Structs.BfA
         public byte LanguageId;
         public byte Bonding;
         public byte DamageDamageType;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
         public byte[] StatModifierBonusStat;
         public byte ContainerSlots;
         public byte MinReputation;

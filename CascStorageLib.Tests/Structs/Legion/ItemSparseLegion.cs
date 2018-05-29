@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace CascStorageLib.Tests
+﻿namespace CascStorageLib.Tests
 {
     public class ItemSparseEntryLegion
     {
@@ -10,7 +8,6 @@ namespace CascStorageLib.Tests
         public string Display2;
         public string Display3;
         public string Description;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
         public int[] Flags;
         public float PriceRandomValue;
         public float PriceVariance;
@@ -20,9 +17,7 @@ namespace CascStorageLib.Tests
         public uint RequiredAbility;
         public int MaxCount;
         public int Stackable;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
         public int[] StatPercentEditor;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
         public float[] StatPercentageOfSocket;
         public float ItemRange;
         public uint BagFamily;
@@ -34,7 +29,6 @@ namespace CascStorageLib.Tests
         public ushort RequiredSkill;
         public ushort RequiredSkillRank;
         public ushort MinFactionID;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
         public short[] ItemStatValue;
         public ushort ScalingStatDistributionID;
         public ushort ItemDelay;
@@ -60,7 +54,6 @@ namespace CascStorageLib.Tests
         public byte RequiredPVPMedal;
         public byte MinReputation;
         public byte ContainerSlots;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
         public sbyte[] StatModifierBonusStat;
         public byte DamageDamageType;
         public byte Bonding;
@@ -68,7 +61,6 @@ namespace CascStorageLib.Tests
         public byte PageMaterialID;
         public byte Material;
         public byte SheatheType;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
         public byte[] SocketType;
         public byte SpellWeightCategory;
         public byte SpellWeight;

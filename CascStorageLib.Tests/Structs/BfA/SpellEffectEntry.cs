@@ -1,5 +1,4 @@
 ﻿using CascStorageLib.Attributes;
-using System.Runtime.InteropServices;
 
 namespace CascStorageLib.Tests
 {
@@ -30,13 +29,9 @@ namespace CascStorageLib.Tests
         public float ResourceCoefficient;
         public float GroupSizeBasePointsCoefficient;
         public float EffectBasePoints;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
         public int[] EffectMiscValues;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
         public uint[] EffectRadiusIndex;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
         public uint[] EffectSpellClassMask;
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
         public uint[] ImplicitTarget;
         public int SpellID;
     }

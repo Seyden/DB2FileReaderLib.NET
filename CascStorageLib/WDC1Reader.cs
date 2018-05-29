@@ -71,19 +71,19 @@ namespace CascStorageLib
             },
         };
 
-        private static Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, int, object>> arrayReaders = new Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, int, object>>
+        private static Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>> arrayReaders = new Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>>
         {
-            [typeof(float[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<float>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
-            [typeof(int[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
-            [typeof(uint[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<uint>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
-            [typeof(ulong[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<ulong>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
-            [typeof(ushort[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<ushort>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
-            [typeof(short[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<short>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
-            [typeof(byte[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<byte>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
-            [typeof(sbyte[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) => GetFieldValueArray<sbyte>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex),
-            [typeof(string[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable, arrayIndex) =>
+            [typeof(float[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<float>(data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(int[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(uint[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<uint>(data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(ulong[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<ulong>(data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(ushort[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<ushort>(data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(short[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<short>(data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(byte[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<byte>(data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(sbyte[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<sbyte>(data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(string[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) =>
             {
-                int strOfs = GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData, arrayIndex)[0];
+                int strOfs = GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData)[0];
                 return stringTable[strOfs];
             },
         };
@@ -121,10 +121,10 @@ namespace CascStorageLib
                     m_data.Offset = m_dataOffset;
                 }
 
-                if (info.ArraySize >= 0)
+                if (info.IsArray)
                 {
                     if (arrayReaders.TryGetValue(info.Field.FieldType, out var reader))
-                        value = reader(m_data, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_reader.StringTable, info.ArraySize);
+                        value = reader(m_data, m_fieldMeta[fieldIndex], m_columnMeta[fieldIndex], m_palletData[fieldIndex], m_commonData[fieldIndex], m_reader.StringTable);
                     else
                         throw new Exception("Unhandled array type: " + typeof(T).Name);
                 }
@@ -170,14 +170,14 @@ namespace CascStorageLib
             throw new Exception(string.Format("Unexpected compression type {0}", columnMeta.CompressionType));
         }
 
-        private static T[] GetFieldValueArray<T>(BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData, int arraySize) where T : struct
+        private static T[] GetFieldValueArray<T>(BitReader r, FieldMetaData fieldMeta, ColumnMetaData columnMeta, Value32[] palletData, Dictionary<int, Value32> commonData) where T : struct
         {
             switch (columnMeta.CompressionType)
             {
                 case CompressionType.None:
                     int bitSize = 32 - fieldMeta.Bits;
 
-                    T[] arr1 = new T[arraySize];
+                    T[] arr1 = new T[columnMeta.Size / (FastStruct<T>.Size * 8)];
 
                     for (int i = 0; i < arr1.Length; i++)
                     {
@@ -188,18 +188,8 @@ namespace CascStorageLib
                     }
 
                     return arr1;
-                case CompressionType.Immediate:
-                    T[] arr2 = new T[arraySize];
-
-                    for (int i = 0; i < arr2.Length; i++)
-                        arr2[i] = r.ReadValue64(columnMeta.Immediate.BitWidth).GetValue<T>();
-
-                    return arr2;
                 case CompressionType.PalletArray:
                     int cardinality = columnMeta.Pallet.Cardinality;
-
-                    if (arraySize != cardinality)
-                        throw new Exception("Struct missmatch for pallet array field?");
 
                     uint palletArrayIndex = r.ReadUInt32(columnMeta.Pallet.BitWidth);
 

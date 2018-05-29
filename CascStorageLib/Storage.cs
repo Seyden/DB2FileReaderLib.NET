@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace CascStorageLib
 {
@@ -38,9 +37,9 @@ namespace CascStorageLib
 
             for (int i = 0; i < fields.Length; ++i)
             {
-                bool indexMapAttribute = reader.Flags.HasFlag(DB2Flags.Index) ? fields[i].GetCustomAttribute<IndexAttribute>() != null : false;
+                bool indexMapAttribute = reader.Flags.HasFlagExt(DB2Flags.Index) ? Attribute.IsDefined(fields[i], typeof(IndexAttribute)) : false;
 
-                fieldCache[i] = new FieldCache<T>(fields[i], fields[i].GetCustomAttribute<MarshalAsAttribute>()?.SizeConst ?? -1, fields[i].GetSetter<T>(), indexMapAttribute);
+                fieldCache[i] = new FieldCache<T>(fields[i], fields[i].FieldType.IsArray, fields[i].GetSetter<T>(), indexMapAttribute);
             }
 
             IEnumerator<KeyValuePair<int, IDB2Row>> coll = reader.GetEnumerator();
