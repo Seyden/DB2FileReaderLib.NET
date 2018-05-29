@@ -32,7 +32,7 @@ namespace CascStorageLib
                 }
             }
 
-            FieldInfo[] fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.NonPublic | BindingFlags.Instance).ToArray();
+            FieldInfo[] fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.NonPublic | BindingFlags.Instance);
 
             FieldCache<T>[] fieldCache = new FieldCache<T>[fields.Length];
 
@@ -43,7 +43,6 @@ namespace CascStorageLib
                 fieldCache[i] = new FieldCache<T>(fields[i], fields[i].FieldType.IsArray, fields[i].GetSetter<T>(), indexMapAttribute);
             }
 
-            //var startTime = DateTime.Now;
             Parallel.ForEach(reader.AsEnumerable(), row =>
             {
                 T entry = new T();
