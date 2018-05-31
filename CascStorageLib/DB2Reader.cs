@@ -9,6 +9,7 @@ namespace CascStorageLib
     public interface IDB2Row
     {
         int Id { get; set; }
+        BitReader Data { get; set; }
         void GetFields<T>(FieldCache<T>[] fields, T entry);
         IDB2Row Clone();
     }
@@ -210,7 +211,6 @@ namespace CascStorageLib
 
         public int Position { get => m_readPos; set => m_readPos = value; }
         public int Offset { get => m_readOffset; set => m_readOffset = value; }
-        public byte[] Data { get => m_array; set => m_array = value; }
 
         public BitReader(byte[] data)
         {

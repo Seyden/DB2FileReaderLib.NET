@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -14,6 +15,7 @@ namespace CascStorageLib
         private int m_recordIndex;
 
         public int Id { get; set; }
+        public BitReader Data { get => m_data; set => m_data = value; }
 
         private FieldMetaData[] m_fieldMeta;
         private ColumnMetaData[] m_columnMeta;
@@ -57,22 +59,13 @@ namespace CascStorageLib
             [typeof(ushort)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => GetFieldValue<ushort>(id, data, fieldMeta, columnMeta, palletData, commonData),
             [typeof(sbyte)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => GetFieldValue<sbyte>(id, data, fieldMeta, columnMeta, palletData, commonData),
             [typeof(byte)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => GetFieldValue<byte>(id, data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(string)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) =>
-            {
-                if (header.Flags.HasFlag(DB2Flags.Sparse))
-                {
-                    return data.ReadCString();
-                }
-                else
-                {
-                    int strOfs = GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData);
-                    return stringTable[strOfs];
-                }
-            },
+            [typeof(string)] = (id, data, fieldMeta, columnMeta, palletData, commonData, stringTable, header) => header.Flags.HasFlagExt(DB2Flags.Sparse) ? data.ReadCString() : stringTable[GetFieldValue<int>(id, data, fieldMeta, columnMeta, palletData, commonData)],
         };
 
         private static Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>> arrayReaders = new Dictionary<Type, Func<BitReader, FieldMetaData, ColumnMetaData, Value32[], Dictionary<int, Value32>, Dictionary<long, string>, object>>
         {
+            [typeof(ulong[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<ulong>(data, fieldMeta, columnMeta, palletData, commonData),
+            [typeof(long[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<long>(data, fieldMeta, columnMeta, palletData, commonData),
             [typeof(float[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<float>(data, fieldMeta, columnMeta, palletData, commonData),
             [typeof(int[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData),
             [typeof(uint[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<uint>(data, fieldMeta, columnMeta, palletData, commonData),
@@ -81,11 +74,7 @@ namespace CascStorageLib
             [typeof(short[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<short>(data, fieldMeta, columnMeta, palletData, commonData),
             [typeof(byte[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<byte>(data, fieldMeta, columnMeta, palletData, commonData),
             [typeof(sbyte[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<sbyte>(data, fieldMeta, columnMeta, palletData, commonData),
-            [typeof(string[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) =>
-            {
-                int strOfs = GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData)[0];
-                return stringTable[strOfs];
-            },
+            [typeof(string[])] = (data, fieldMeta, columnMeta, palletData, commonData, stringTable) => GetFieldValueArray<int>(data, fieldMeta, columnMeta, palletData, commonData).Select(i => stringTable[i]).ToArray(),
         };
 
         public void GetFields<T>(FieldCache<T>[] fields, T entry)
@@ -98,7 +87,7 @@ namespace CascStorageLib
                 if (info.IndexMapField)
                 {
                     indexFieldOffSet++;
-                    info.Setter(entry, Id);
+                    info.Setter(entry, Convert.ChangeType(Id, info.Field.FieldType));
                     continue;
                 }
 
@@ -249,7 +238,7 @@ namespace CascStorageLib
                 // field meta data
                 m_meta = reader.ReadArray<FieldMetaData>(FieldsCount);
 
-                if (!Flags.HasFlag(DB2Flags.Sparse))
+                if (!Flags.HasFlagExt(DB2Flags.Sparse))
                 {
                     // records data
                     recordsData = reader.ReadBytes(RecordsCount * RecordSize);
@@ -356,8 +345,7 @@ namespace CascStorageLib
 
                 for (int i = 0; i < RecordsCount; ++i)
                 {
-                    BitReader bitReader = new BitReader(recordsData);
-                    bitReader.Position = 0;
+                    BitReader bitReader = new BitReader(recordsData) { Position = 0 };
 
                     if (Flags.HasFlagExt(DB2Flags.Sparse))
                     {
@@ -378,6 +366,11 @@ namespace CascStorageLib
                 foreach (var copyRow in copyData)
                 {
                     IDB2Row rec = _Records[copyRow.Value].Clone();
+                    rec.Data = new BitReader(recordsData);
+
+                    rec.Data.Position = Flags.HasFlagExt(DB2Flags.Sparse) ? _Records[copyRow.Value].Data.Position : 0;
+                    rec.Data.Offset = Flags.HasFlagExt(DB2Flags.Sparse) ? 0 : _Records[copyRow.Value].Data.Offset;
+
                     rec.Id = copyRow.Key;
                     _Records.Add(copyRow.Key, rec);
                 }
