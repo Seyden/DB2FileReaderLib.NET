@@ -352,6 +352,8 @@ namespace CascStorageLib
 
                     int position = 0;
 
+                    bool indexDataNotEmpty = sections[sectionIndex].IndexDataSize != 0 && m_indexData.GroupBy(i => i).Where(d => d.Count() > 1).Count() == 0;
+
                     for (int i = 0; i < RecordsCount; ++i)
                     {
                         BitReader bitReader = new BitReader(recordsData) { Position = 0 };
@@ -364,9 +366,9 @@ namespace CascStorageLib
                         else
                             bitReader.Offset = i * RecordSize;
 
-                        IDB2Row rec = new WDC2Row(this, bitReader, sections[sectionIndex].FileOffset, sections[sectionIndex].IndexDataSize != 0 ? m_indexData[i] : -1, refData?.Entries[i], i);
+                        IDB2Row rec = new WDC2Row(this, bitReader, sections[sectionIndex].FileOffset, indexDataNotEmpty ? m_indexData[i] : -1, refData?.Entries[i], i);
 
-                        if (sections[sectionIndex].IndexDataSize != 0)
+                        if (indexDataNotEmpty)
                             _Records.Add((int)m_indexData[i], rec);
                         else
                             _Records.Add(rec.Id, rec);
