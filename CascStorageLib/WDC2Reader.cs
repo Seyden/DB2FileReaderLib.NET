@@ -196,7 +196,7 @@ namespace CascStorageLib
 
     public class WDC2Reader : DB2Reader
     {
-        private const int HeaderSize = 72 + 1 * 36;
+        private const int HeaderSize = 72;
         private const uint WDC2FmtSig = 0x32434457; // WDC2
 
         public WDC2Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
@@ -206,7 +206,7 @@ namespace CascStorageLib
             using (var reader = new BinaryReader(stream, Encoding.UTF8))
             {
                 if (reader.BaseStream.Length < HeaderSize)
-                    throw new InvalidDataException(String.Format("WDC2 file is corrupted!"));
+                    throw new InvalidDataException(String.Format("WDC2 file is corrupted or empty!"));
 
                 uint magic = reader.ReadUInt32();
 
@@ -234,6 +234,9 @@ namespace CascStorageLib
 
                 if (sectionsCount > 1)
                     throw new Exception("sectionsCount > 1");
+
+                if (sectionsCount == 0)
+                    return;
 
                 SectionHeader[] sections = reader.ReadArray<SectionHeader>(sectionsCount);
 
