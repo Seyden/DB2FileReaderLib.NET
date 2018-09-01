@@ -32,7 +32,7 @@ namespace CascStorageLib
                 }
             }
 
-            FieldInfo[] fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo[] fields = typeof(T).GetFields();
 
             FieldCache<T>[] fieldCache = new FieldCache<T>[fields.Length];
 
