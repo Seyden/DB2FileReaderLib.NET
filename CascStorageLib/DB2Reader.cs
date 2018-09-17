@@ -255,6 +255,17 @@ namespace CascStorageLib
             }
         }
 
+        public Value64 ReadValue64Signed(int numBits)
+        {
+            unsafe
+            {
+                ulong result = ReadUInt64(numBits);
+                ulong signedShift = (1UL << (numBits - 1));
+                result = (signedShift ^ result) - signedShift;
+                return *(Value64*)&result;
+            }
+        }
+
         public string ReadCString()
         {
             uint num;

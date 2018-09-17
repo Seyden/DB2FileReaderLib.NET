@@ -139,8 +139,9 @@ namespace CascStorageLib
                         return r.ReadValue64(bitSize).GetValue<T>();
                     else
                         return r.ReadValue64(columnMeta.Immediate.BitWidth).GetValue<T>();
-                case CompressionType.Immediate:
                 case CompressionType.SignedImmediate:
+                    return r.ReadValue64Signed(columnMeta.Immediate.BitWidth).GetValue<T>();
+                case CompressionType.Immediate:
                     return r.ReadValue64(columnMeta.Immediate.BitWidth).GetValue<T>();
                 case CompressionType.Common:
                     if (commonData.TryGetValue(Id, out Value32 val))
