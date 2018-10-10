@@ -192,8 +192,7 @@ namespace CascStorageLib
 
     public struct SectionHeader
     {
-        public int unk1;
-        public int unk2;
+        public ulong TactKeyLookup;
         public int FileOffset;
         public int NumRecords;
         public int StringTableSize;
@@ -201,6 +200,19 @@ namespace CascStorageLib
         public int SparseTableOffset; // CatalogDataOffset, absolute value, {uint offset, ushort size}[MaxId - MinId + 1]
         public int IndexDataSize; // int indexData[IndexDataSize / 4]
         public int ParentLookupDataSize; // uint NumRecords, uint minId, uint maxId, {uint id, uint index}[NumRecords], questionable usefulness...
+    }
+
+    public struct SectionHeaderWDC3
+    {
+        public ulong TactKeyLookup;
+        public int FileOffset;
+        public int NumRecords;
+        public int StringTableSize;
+        public int SparseTableOffset; // CatalogDataOffset, absolute value, {uint offset, ushort size}[MaxId - MinId + 1]
+        public int IndexDataSize; // int indexData[IndexDataSize / 4]
+        public int ParentLookupDataSize; // uint NumRecords, uint minId, uint maxId, {uint id, uint index}[NumRecords], questionable usefulness...
+        public int unk;
+        public int CopyTableCount;
     }
 
     public class BitReader
@@ -251,6 +263,17 @@ namespace CascStorageLib
             unsafe
             {
                 ulong result = ReadUInt64(numBits);
+                return *(Value64*)&result;
+            }
+        }
+
+        public Value64 ReadValue64Signed(int numBits)
+        {
+            unsafe
+            {
+                ulong result = ReadUInt64(numBits);
+                ulong signedShift = (1UL << (numBits - 1));
+                result = (signedShift ^ result) - signedShift;
                 return *(Value64*)&result;
             }
         }

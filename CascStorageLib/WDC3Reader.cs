@@ -6,7 +6,7 @@ using System.Text;
 
 namespace CascStorageLib
 {
-    public class WDC2Row : IDB2Row
+    public class WDC3Row : IDB2Row
     {
         private BitReader m_data;
         private DB2Reader m_reader;
@@ -23,7 +23,7 @@ namespace CascStorageLib
         private Dictionary<int, Value32>[] m_commonData;
         private ReferenceEntry? m_refData;
 
-        public WDC2Row(DB2Reader reader, BitReader data, int recordsOffset, int id, ReferenceEntry? refData, int recordIndex)
+        public WDC3Row(DB2Reader reader, BitReader data, int recordsOffset, int id, ReferenceEntry? refData, int recordIndex)
         {
             m_reader = reader;
             m_data = data;
@@ -221,24 +221,24 @@ namespace CascStorageLib
         }
     }
 
-    public class WDC2Reader : DB2Reader
+    public class WDC3Reader : DB2Reader
     {
         private const int HeaderSize = 72;
-        private const uint WDC2FmtSig = 0x32434457; // WDC2
+        private const uint WDC3FmtSig = 0x33434457; // WDC2
 
-        public WDC2Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
+        public WDC3Reader(string dbcFile) : this(new FileStream(dbcFile, FileMode.Open)) { }
 
-        public WDC2Reader(Stream stream)
+        public WDC3Reader(Stream stream)
         {
             using (var reader = new BinaryReader(stream, Encoding.UTF8))
             {
                 if (reader.BaseStream.Length < HeaderSize)
-                    throw new InvalidDataException(String.Format("WDC2 file is corrupted or empty!"));
+                    throw new InvalidDataException(String.Format("WDC3 file is corrupted or empty!"));
 
                 uint magic = reader.ReadUInt32();
 
-                if (magic != WDC2FmtSig)
-                    throw new InvalidDataException(String.Format("WDC2 file is corrupted!"));
+                if (magic != WDC3FmtSig)
+                    throw new InvalidDataException(String.Format("WDC3 file is corrupted!"));
 
                 RecordsCount = reader.ReadInt32();
                 FieldsCount = reader.ReadInt32();
@@ -265,7 +265,7 @@ namespace CascStorageLib
                 if (sectionsCount == 0)
                     return;
 
-                SectionHeader[] sections = reader.ReadArray<SectionHeader>(sectionsCount);
+                SectionHeaderWDC3[] sections = reader.ReadArray<SectionHeaderWDC3>(sectionsCount);
 
                 // field meta data
                 m_meta = reader.ReadArray<FieldMetaData>(FieldsCount);
@@ -301,6 +301,10 @@ namespace CascStorageLib
 
                 for (int sectionIndex = 0; sectionIndex < sectionsCount; sectionIndex++)
                 {
+                    if(sections[sectionIndex].TactKeyLookup != 0)
+                    {
+                        continue;
+                    }
                     reader.BaseStream.Position = sections[sectionIndex].FileOffset;
 
                     if (!Flags.HasFlagExt(DB2Flags.Sparse))
@@ -340,7 +344,7 @@ namespace CascStorageLib
                                 continue;
 
                             // special case, may contain duplicates in the offset map that we don't want
-                            if (sections[sectionIndex].CopyTableSize == 0)
+                            if (sections[sectionIndex].CopyTableCount == 0)
                             {
                                 if (offSetKeyMap.ContainsKey(sparse.Offset))
                                     continue;
@@ -359,7 +363,7 @@ namespace CascStorageLib
                     // duplicate rows data
                     Dictionary<int, int> copyData = new Dictionary<int, int>();
 
-                    for (int i = 0; i < sections[sectionIndex].CopyTableSize / 8; i++)
+                    for (int i = 0; i < sections[sectionIndex].CopyTableCount; i++)
                         copyData[reader.ReadInt32()] = reader.ReadInt32();
 
                     // reference data
