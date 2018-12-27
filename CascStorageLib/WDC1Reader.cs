@@ -355,7 +355,7 @@ namespace CascStorageLib
                     else
                         bitReader.Offset = i * RecordSize;
 
-                    IDB2Row rec = new WDC1Row(this, bitReader, indexDataSize != 0 ? m_indexData[i] : -1, refData?.Entries[i], i);
+                    IDB2Row rec = new WDC1Row(this, bitReader, indexDataSize != 0 ? m_indexData[i] : -1, refData?.Entries.ElementAtOrDefault(i), i);
 
                     if (indexDataSize != 0)
                         _Records.Add(m_indexData[i], rec);
