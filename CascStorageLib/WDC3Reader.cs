@@ -385,8 +385,6 @@ namespace CascStorageLib
                         else
                             bitReader.Offset = i * RecordSize;
 
-                        var refEntry = new ReferenceEntry();
-
                         IDB2Row rec = new WDC3Row(this, bitReader, sections[sectionIndex].FileOffset, indexDataNotEmpty ? m_indexData[i] : -1, refData?.Entries[i], i);
 
                         if (indexDataNotEmpty)
