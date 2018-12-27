@@ -56,6 +56,7 @@
     <Compile Include="WDC1Reader.cs" />
     <Compile Include="WDC2Reader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WDC3Reader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
