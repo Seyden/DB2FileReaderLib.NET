@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace CascStorageLib
+namespace DB2FileReaderLib.NET
 {
     public class WDC1Row : IDB2Row
     {

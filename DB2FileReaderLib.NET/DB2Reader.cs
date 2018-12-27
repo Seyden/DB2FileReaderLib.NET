@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace CascStorageLib
+namespace DB2FileReaderLib.NET
 {
     public interface IDB2Row
     {

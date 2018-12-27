@@ -1,4 +1,4 @@
-﻿using CascStorageLib.Attributes;
+﻿using DB2FileReaderLib.NET.Attributes;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace CascStorageLib
+namespace DB2FileReaderLib.NET
 {
     public class Storage<T> : ConcurrentDictionary<int, T> where T : class, new()
     {

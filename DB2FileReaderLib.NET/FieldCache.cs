@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace CascStorageLib
+namespace DB2FileReaderLib.NET
 {
     public class FieldCache<T>
     {

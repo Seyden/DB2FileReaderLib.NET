@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2027
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CascStorageLib", "CascStorageLib\CascStorageLib.csproj", "{B7C4440C-CE8F-4EC1-9793-61958F2265DF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CascStorageLib.Tests", "CascStorageLib.Tests\CascStorageLib.Tests.csproj", "{E01C8B4A-B0C0-4ED7-A868-3B675883D148}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DB2FileReaderLib.NET", "DB2FileReaderLib.NET\DB2FileReaderLib.NET.csproj", "{B7C4440C-CE8F-4EC1-9793-61958F2265DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

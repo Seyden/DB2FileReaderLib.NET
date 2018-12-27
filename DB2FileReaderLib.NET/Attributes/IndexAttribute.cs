@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CascStorageLib.Attributes
+namespace DB2FileReaderLib.NET.Attributes
 {
     public class IndexAttribute : Attribute
     {
