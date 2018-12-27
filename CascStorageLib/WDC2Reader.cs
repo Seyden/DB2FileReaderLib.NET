@@ -260,7 +260,7 @@ namespace CascStorageLib
                 int sectionsCount = reader.ReadInt32();
 
                 if (sectionsCount > 1)
-                    throw new Exception("sectionsCount > 1");
+                    throw new Exception("WDC2 only supports 1 section");
 
                 if (sectionsCount == 0)
                     return;
