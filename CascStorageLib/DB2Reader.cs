@@ -190,10 +190,10 @@ namespace CascStorageLib
         public ushort Size;
     }
 
+    [StructLayout(LayoutKind.Sequential, Pack = 2)]
     public struct SectionHeader
     {
-        public int unk1;
-        public int unk2;
+        public ulong TactKeyLookup;
         public int FileOffset;
         public int NumRecords;
         public int StringTableSize;
