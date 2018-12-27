@@ -140,7 +140,6 @@ namespace CascStorageLib
                     else
                         return r.ReadValue64(columnMeta.Immediate.BitWidth).GetValue<T>();
                 case CompressionType.Immediate:
-                case CompressionType.SignedImmediate:
                     return r.ReadValue64(columnMeta.Immediate.BitWidth).GetValue<T>();
                 case CompressionType.Common:
                     if (commonData.TryGetValue(Id, out Value32 val))
@@ -153,6 +152,8 @@ namespace CascStorageLib
                     T val1 = palletData[palletIndex].GetValue<T>();
 
                     return val1;
+                case CompressionType.SignedImmediate:
+                    return r.ReadValue64Signed(columnMeta.Immediate.BitWidth).GetValue<T>();
             }
             throw new Exception(string.Format("Unexpected compression type {0}", columnMeta.CompressionType));
         }
